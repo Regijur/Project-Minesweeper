@@ -5,10 +5,11 @@ using UnityEngine.UI;
 public class MyGameManager : MonoBehaviour
 {
     [Header("Components")]
-    private GameObject[] mines;
-    public List<GameObject> minesList;
+    public GameObject[] mines;
+    [HideInInspector]public List<GameObject> minesList;
     public bool gameStarted = false;
     public MineGenerator _mineGenerator;
+    public Button dig;
 
     [Header("Timer")]
     public Timer timer;
@@ -16,20 +17,24 @@ public class MyGameManager : MonoBehaviour
     [Header("Mine Selection")]
     public GameObject buttonSelected;
     public List<GameObject> adjacentButtons;
+    public int numberOfCollumns;
 
-    void Start()
-    {
-        mines = GameObject.FindGameObjectsWithTag("Mine");
-        foreach (GameObject mine in mines) minesList.Add(mine);
-    }
 
     public void StartGame(GameObject button)
     {
         if (!gameStarted)
         {
+            foreach (GameObject mine in mines) minesList.Add(mine);
             if (timer != null) timer.SetTimerText();
             gameStarted = true;
             _mineGenerator.GenerateMines(mines);
+            dig.interactable = true;
+            //Temporary
+            foreach (GameObject mine in minesList)
+            {
+                Text buttonText = mine.GetComponentInChildren<Text>();
+                buttonText.text = minesList.IndexOf(mine).ToString();
+            }
         }
         else
         {
@@ -39,51 +44,28 @@ public class MyGameManager : MonoBehaviour
 
     public void SelectMine(GameObject buttonS)
     {
-        if (buttonSelected != null)
-        {
-            buttonSelected.GetComponent<Image>().color = Color.white;
-            foreach(GameObject b in adjacentButtons)
-            {
-                b.GetComponent<Image>().color = Color.white;
-            } 
-        }
         buttonSelected = buttonS;
         GetAdjacentButtons(buttonS);
-        foreach (GameObject b in adjacentButtons)
-        {
-            Mine bomb = b.GetComponent<Mine>();
-            if(bomb != null)
-            {
-                if(bomb.isMine) b.GetComponent<Image>().color = Color.yellow;
-                else b.GetComponent<Image>().color = Color.blue;
-            }
-        }
-        Mine isBomb = buttonSelected.GetComponent<Mine>();
-        if (isBomb != null)
-        {
-            if (isBomb.isMine) buttonSelected.GetComponent<Image>().color = Color.red;
-            else buttonSelected.GetComponent<Image>().color = Color.green;
-        }
     }
 
     public void GetAdjacentButtons(GameObject button)
     {
         if (adjacentButtons != null) adjacentButtons.Clear();
         int indexOfSelectedButton = minesList.IndexOf(button);
-        int rest = indexOfSelectedButton % 8;
-        if(rest != 7)
+        int rest = indexOfSelectedButton % numberOfCollumns;
+        if(rest != numberOfCollumns - 1)
         {
-            if (indexOfSelectedButton <= 71) adjacentButtons.Add(minesList[indexOfSelectedButton + 9]);
+            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns + 1]);
             adjacentButtons.Add(minesList[indexOfSelectedButton + 1]);
-            if (indexOfSelectedButton > 7) adjacentButtons.Add(minesList[indexOfSelectedButton - 7]);
+            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns + 1]);
         }
         if(rest != 0)
         {
-            if (indexOfSelectedButton > 7) adjacentButtons.Add(minesList[indexOfSelectedButton - 9]);
+            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns - 1]);
             adjacentButtons.Add(minesList[indexOfSelectedButton - 1]);
-            if (indexOfSelectedButton <= 71) adjacentButtons.Add(minesList[indexOfSelectedButton + 7]);
+            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns - 1]);
         }
-        if(indexOfSelectedButton <= 71)  adjacentButtons.Add(minesList[indexOfSelectedButton + 8]);
-        if (indexOfSelectedButton > 7) adjacentButtons.Add(minesList[indexOfSelectedButton - 8]);
+        if(indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1)  adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns]);
+        if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns]);
     }
 }
