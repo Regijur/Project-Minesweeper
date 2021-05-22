@@ -17,7 +17,7 @@ public class MineGenerator : MonoBehaviour
             Mine mineScript = mine.GetComponent<Mine>();
             if (mineScript != null)
             {
-                if (numberOfMines < maxOfMines && Random.Range(0, Mathf.CeilToInt(100 / probability)) == 0)
+                if (numberOfMines < maxOfMines && Random.Range(0, Mathf.CeilToInt(100 / probability)) == 0 && !mineScript.already)
                 {
                     mineScript.isMine = true;
                     numberOfMines++;

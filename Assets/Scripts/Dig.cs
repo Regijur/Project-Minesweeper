@@ -10,16 +10,20 @@ public class Dig : MonoBehaviour
 
     public void ToDig()
     {
-        buttonSlctd = manager.buttonSelected;
-        if (buttonSlctd.GetComponent<Mine>().isMine) buttonSlctd.GetComponent<Image>().color = Color.red;
-        int minesAround = 0;
-        foreach(GameObject button in manager.adjacentButtons)
+        if (manager.buttonSelected != null)
         {
-            if (button.GetComponent<Mine>().isMine)
+            buttonSlctd = manager.buttonSelected;
+            if (buttonSlctd.GetComponent<Mine>().isMine) buttonSlctd.GetComponent<Image>().color = Color.red;
+            int minesAround = 0;
+            foreach (GameObject button in manager.adjacentButtons)
             {
-                minesAround++;
+                if (button.GetComponent<Mine>().isMine)
+                {
+                    minesAround++;
+                }
             }
+            buttonSlctd.GetComponentInChildren<Text>().text = (minesAround > 0)? minesAround.ToString() : "";
+
         }
-        buttonSlctd.GetComponentInChildren<Text>().text = minesAround.ToString();
     }
 }

@@ -5,4 +5,5 @@ using UnityEngine;
 public class Mine : MonoBehaviour
 {
     public bool isMine = false;
+    public bool already = false;
 }

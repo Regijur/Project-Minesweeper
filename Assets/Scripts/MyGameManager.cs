@@ -27,14 +27,19 @@ public class MyGameManager : MonoBehaviour
             foreach (GameObject mine in mines) minesList.Add(mine);
             if (timer != null) timer.SetTimerText();
             gameStarted = true;
-            _mineGenerator.GenerateMines(mines);
             dig.interactable = true;
             //Temporary
+            CaveZeros(button);
+            _mineGenerator.GenerateMines(mines);
             foreach (GameObject mine in minesList)
             {
-                Text buttonText = mine.GetComponentInChildren<Text>();
-                buttonText.text = minesList.IndexOf(mine).ToString();
+                if (!mine.GetComponent<Mine>().already)
+                {
+                    Text buttonText = mine.GetComponentInChildren<Text>();
+                    buttonText.text = minesList.IndexOf(mine).ToString();
+                }
             }
+            SelectMine(button);
         }
         else
         {
@@ -48,24 +53,49 @@ public class MyGameManager : MonoBehaviour
         GetAdjacentButtons(buttonS);
     }
 
-    public void GetAdjacentButtons(GameObject button)
+    public List<GameObject> GetAdjacentButtons(GameObject button, bool toOverwrite = true)
     {
-        if (adjacentButtons != null) adjacentButtons.Clear();
+        List<GameObject> adjacentButtonsTemp = new List<GameObject>();
+
         int indexOfSelectedButton = minesList.IndexOf(button);
         int rest = indexOfSelectedButton % numberOfCollumns;
         if(rest != numberOfCollumns - 1)
         {
-            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns + 1]);
-            adjacentButtons.Add(minesList[indexOfSelectedButton + 1]);
-            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns + 1]);
+            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns + 1]);
+            adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + 1]);
+            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns + 1]);
         }
         if(rest != 0)
         {
-            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns - 1]);
-            adjacentButtons.Add(minesList[indexOfSelectedButton - 1]);
-            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns - 1]);
+            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns - 1]);
+            adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - 1]);
+            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns - 1]);
         }
-        if(indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1)  adjacentButtons.Add(minesList[indexOfSelectedButton + numberOfCollumns]);
-        if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtons.Add(minesList[indexOfSelectedButton - numberOfCollumns]);
+        if(indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1)  adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns]);
+        if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns]);
+
+        if (adjacentButtons != null) 
+        { 
+            adjacentButtons.Clear();
+            adjacentButtons = adjacentButtonsTemp;
+        }
+
+        return adjacentButtonsTemp;
     }
+
+    public void CaveZeros(GameObject button)
+    {
+        List<GameObject> buttons = GetAdjacentButtons(button);
+        buttons.Add(button);
+        foreach(GameObject b in buttons)
+        {
+            Mine mine = b.GetComponent<Mine>();
+            if(mine!= null) 
+            {
+                mine.already = true;
+                b.GetComponentInChildren<Text>().text = "";
+            }
+        }
+    }
+    
 }
