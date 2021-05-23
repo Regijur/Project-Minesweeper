@@ -19,12 +19,25 @@ public class MyGameManager : MonoBehaviour
     public List<GameObject> adjacentButtons;
     public int numberOfCollumns;
 
+    [Header("Colors")]
+    public Color par;
+    public Color impar;
+
+    private void Start()
+    {
+        foreach (GameObject mine in mines)
+        {
+            minesList.Add(mine);
+            Image buttonIMG = mine.GetComponent<Image>();
+            buttonIMG.color = (minesList.IndexOf(mine) % 2 == 0) ? par : impar;
+        }
+        SetCollumLine(minesList);
+    }
 
     public void StartGame(GameObject button)
     {
         if (!gameStarted)
         {
-            foreach (GameObject mine in mines) minesList.Add(mine);
             if (timer != null) timer.SetTimerText();
             gameStarted = true;
             dig.interactable = true;
@@ -35,11 +48,11 @@ public class MyGameManager : MonoBehaviour
             {
                 if (!mine.GetComponent<Mine>().already)
                 {
-                    Text buttonText = mine.GetComponentInChildren<Text>();
-                    buttonText.text = minesList.IndexOf(mine).ToString();
+                    
                 }
             }
             SelectMine(button);
+            //InicialStage(button);
         }
         else
         {
@@ -56,31 +69,53 @@ public class MyGameManager : MonoBehaviour
     public List<GameObject> GetAdjacentButtons(GameObject button, bool toOverwrite = true)
     {
         List<GameObject> adjacentButtonsTemp = new List<GameObject>();
-
-        int indexOfSelectedButton = minesList.IndexOf(button);
-        int rest = indexOfSelectedButton % numberOfCollumns;
-        if(rest != numberOfCollumns - 1)
+        Mine buttonMine = button.GetComponent<Mine>();
+        foreach(GameObject mine in minesList)
         {
-            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns + 1]);
-            adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + 1]);
-            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns + 1]);
+            Mine mineScript = mine.GetComponent<Mine>();
+            if (mineScript.collumn == buttonMine.collumn + 1)
+            {
+                if (mineScript.line == buttonMine.line + 1) adjacentButtonsTemp.Add(mine);
+                if (mineScript.line == buttonMine.line) adjacentButtonsTemp.Add(mine);
+                if (mineScript.line == buttonMine.line - 1) adjacentButtonsTemp.Add(mine);
+            }
+            if (mineScript.collumn == buttonMine.collumn)
+            {
+                if (mineScript.line == buttonMine.line + 1) adjacentButtonsTemp.Add(mine);
+                if (mineScript.line == buttonMine.line - 1) adjacentButtonsTemp.Add(mine);
+            }
+            if (mineScript.collumn == buttonMine.collumn - 1)
+            {
+                if (mineScript.line == buttonMine.line + 1) adjacentButtonsTemp.Add(mine);
+                if (mineScript.line == buttonMine.line) adjacentButtonsTemp.Add(mine);
+                if (mineScript.line == buttonMine.line - 1) adjacentButtonsTemp.Add(mine);
+            }
+            
         }
-        if(rest != 0)
-        {
-            if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns - 1]);
-            adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - 1]);
-            if (indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns - 1]);
-        }
-        if(indexOfSelectedButton <= minesList.Count - numberOfCollumns - 1)  adjacentButtonsTemp.Add(minesList[indexOfSelectedButton + numberOfCollumns]);
-        if (indexOfSelectedButton > numberOfCollumns - 1) adjacentButtonsTemp.Add(minesList[indexOfSelectedButton - numberOfCollumns]);
 
-        if (adjacentButtons != null) 
-        { 
+        if (adjacentButtons != null)
+        {
             adjacentButtons.Clear();
-            adjacentButtons = adjacentButtonsTemp;
+            if(toOverwrite) adjacentButtons = adjacentButtonsTemp;
         }
 
         return adjacentButtonsTemp;
+    }
+
+    int MinesAround(GameObject button)
+    {
+        int numberOfMines = 0;
+        List<GameObject> minesADJ = GetAdjacentButtons(button, false);
+        foreach(GameObject mine in minesADJ)
+        {
+            Mine mineScript = mine.GetComponent<Mine>();
+            if (mineScript.isMine)
+            {
+                numberOfMines++;
+            }
+        }
+
+        return numberOfMines;
     }
 
     public void CaveZeros(GameObject button)
@@ -98,4 +133,34 @@ public class MyGameManager : MonoBehaviour
         }
     }
     
+    public void InicialStage(GameObject button)
+    {
+        List<GameObject> buttonsADJ = GetAdjacentButtons(button, false);
+        
+        foreach(GameObject b in buttonsADJ)
+        {
+            Text mineText = b.GetComponentInChildren<Text>();
+            mineText.text = MinesAround(b).ToString();
+            if(MinesAround(b) == 0)
+            {
+                InicialStage(b);
+            }
+        }
+    }
+
+    public void SetCollumLine(List<GameObject> minesL)
+    {
+        foreach(GameObject mine in minesL)
+        {
+            int line = Mathf.CeilToInt(minesL.IndexOf(mine) / numberOfCollumns) + 1;
+            int collumn = (minesL.IndexOf(mine) + 1) % numberOfCollumns;
+
+            Mine mineScript = mine.GetComponent<Mine>();
+            if (mineScript != null)
+            {
+                mineScript.collumn = collumn;
+                mineScript.line = line;
+            }
+        }
+    }
 }
